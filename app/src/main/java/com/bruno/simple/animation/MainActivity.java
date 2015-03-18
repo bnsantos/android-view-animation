@@ -1,7 +1,7 @@
 package com.bruno.simple.animation;
 
+import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,7 +9,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
+import android.view.animation.TranslateAnimation;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -52,6 +54,8 @@ public class MainActivity extends ActionBarActivity {
      * A placeholder fragment containing a simple view.
      */
     public static class PlaceholderFragment extends Fragment {
+        private View mHiddenView;
+        private View mView;
 
         public PlaceholderFragment() {
         }
@@ -59,8 +63,57 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
+            mView = inflater.inflate(R.layout.fragment_main, container, false);
+            return mView;
+        }
+
+        @Override
+        public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            mHiddenView = mView.findViewById(R.id.hiddenView);
+            mView.findViewById(R.id.showButton).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    changeViewVisibility();
+                }
+            });
+
+            ListView listView = (ListView) mView.findViewById(R.id.listView);
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1, getActivity().getResources().getStringArray(R.array.countries));
+            listView.setAdapter(adapter);
+        }
+
+        private void changeViewVisibility(){
+            if(mHiddenView.getVisibility()==View.VISIBLE){
+                hideView();
+            }else{
+                showView();
+            }
+        }
+
+        private void hideView(){
+            slideToBottom(mHiddenView);
+        }
+
+        private void showView(){
+            slideFromBottom(mHiddenView);
+        }
+
+        public void slideFromBottom(View view){
+            TranslateAnimation animate = new TranslateAnimation(0,0,mView.getHeight(),0);
+            animate.setDuration(500);
+            animate.setFillAfter(true);
+            view.startAnimation(animate);
+            view.setVisibility(View.VISIBLE);
+        }
+
+        public void slideToBottom(View view){
+            TranslateAnimation animate = new TranslateAnimation(0,0,0,mView.getHeight());
+            animate.setDuration(500);
+            animate.setFillAfter(true);
+            view.startAnimation(animate);
+            view.setVisibility(View.GONE);
         }
     }
 }
