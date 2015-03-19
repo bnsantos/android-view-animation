@@ -5,6 +5,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 
@@ -76,12 +77,25 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void slideToBottom(View view, int offset){
-        getSupportFragmentManager().beginTransaction()
-                .remove(mBottomFragment.get())
-                .commit();
         TranslateAnimation animate = new TranslateAnimation(0,0,offset,mContainer.getHeight());
         animate.setDuration(500);
         animate.setFillAfter(true);
+        animate.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                removeBottomFragment();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
         view.startAnimation(animate);
         view.setVisibility(View.GONE);
     }
@@ -96,5 +110,11 @@ public class MainActivity extends ActionBarActivity {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
         params.setMargins(0, offset, 0, 0);
         mBottomContainer.setLayoutParams(params);
+    }
+
+    private void removeBottomFragment(){
+        getSupportFragmentManager().beginTransaction()
+                .remove(mBottomFragment.get())
+                .commit();
     }
 }
