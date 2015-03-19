@@ -1,20 +1,20 @@
 package com.bruno.simple.animation;
 
-import android.support.annotation.Nullable;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.TranslateAnimation;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.FrameLayout;
+
+import java.lang.ref.WeakReference;
 
 
 public class MainActivity extends ActionBarActivity {
+    private WeakReference<BottomFragment> mBottomFragment;
+    private FrameLayout mContainer;
+    private FrameLayout mBottomContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,9 +22,11 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.placeholderFragment, new PlaceholderFragment())
                     .commit();
         }
+        mContainer = (FrameLayout) findViewById(R.id.container);
+        mBottomContainer = (FrameLayout) findViewById(R.id.bottomFragment);
     }
 
 
@@ -50,70 +52,49 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        private View mHiddenView;
-        private View mView;
-
-        public PlaceholderFragment() {
+    public void changeBottomFragmentVisibility(int offset){
+        if(mBottomContainer.getVisibility()==View.VISIBLE){
+            setBottomFragmentMargin(0);
+            slideToBottom(mBottomContainer, offset);
+        }else{
+            initFragment();
+            setBottomFragmentMargin(offset);
+            slideFromBottom(mBottomContainer);
         }
+    }
 
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            mView = inflater.inflate(R.layout.fragment_main, container, false);
-            return mView;
+    private void slideFromBottom(View view){
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.bottomFragment, mBottomFragment.get())
+                .commit();
+
+        TranslateAnimation animate = new TranslateAnimation(0,0,mContainer.getHeight(),0);
+        animate.setDuration(500);
+        animate.setFillAfter(true);
+        view.startAnimation(animate);
+        view.setVisibility(View.VISIBLE);
+    }
+
+    private void slideToBottom(View view, int offset){
+        getSupportFragmentManager().beginTransaction()
+                .remove(mBottomFragment.get())
+                .commit();
+        TranslateAnimation animate = new TranslateAnimation(0,0,offset,mContainer.getHeight());
+        animate.setDuration(500);
+        animate.setFillAfter(true);
+        view.startAnimation(animate);
+        view.setVisibility(View.GONE);
+    }
+
+    private void initFragment(){
+        if(mBottomFragment==null||mBottomFragment.get()==null){
+            mBottomFragment = new WeakReference<>(BottomFragment.newInstance());
         }
+    }
 
-        @Override
-        public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-            super.onViewCreated(view, savedInstanceState);
-            mHiddenView = mView.findViewById(R.id.hiddenView);
-            mView.findViewById(R.id.showButton).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    changeViewVisibility();
-                }
-            });
-
-            ListView listView = (ListView) mView.findViewById(R.id.listView);
-
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1, getActivity().getResources().getStringArray(R.array.countries));
-            listView.setAdapter(adapter);
-        }
-
-        private void changeViewVisibility(){
-            if(mHiddenView.getVisibility()==View.VISIBLE){
-                hideView();
-            }else{
-                showView();
-            }
-        }
-
-        private void hideView(){
-            slideToBottom(mHiddenView);
-        }
-
-        private void showView(){
-            slideFromBottom(mHiddenView);
-        }
-
-        public void slideFromBottom(View view){
-            TranslateAnimation animate = new TranslateAnimation(0,0,mView.getHeight(),0);
-            animate.setDuration(500);
-            animate.setFillAfter(true);
-            view.startAnimation(animate);
-            view.setVisibility(View.VISIBLE);
-        }
-
-        public void slideToBottom(View view){
-            TranslateAnimation animate = new TranslateAnimation(0,0,0,mView.getHeight());
-            animate.setDuration(500);
-            animate.setFillAfter(true);
-            view.startAnimation(animate);
-            view.setVisibility(View.GONE);
-        }
+    private void setBottomFragmentMargin(int offset){
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+        params.setMargins(0, offset, 0, 0);
+        mBottomContainer.setLayoutParams(params);
     }
 }
